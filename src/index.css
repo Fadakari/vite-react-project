@@ -1,0 +1,15 @@
+@import 'vazirmatn/Vazirmatn-font-face.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* تنظیمات کلی بادی */
+body {
+  @apply font-sans bg-main-gradient min-h-screen text-slate-800;
+  /* جهت متن راست‌چین */
+  direction: rtl; 
+}
+.login-dashboard{
+  box-shadow: 0 0 0.5rem 0rem black;
+}
