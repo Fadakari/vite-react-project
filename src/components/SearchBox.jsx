@@ -1,4 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = () => {
+    setLoading(true);
+    setSuccess(false);
+    // شبیه‌سازی تاخیر ۱.۵ ثانیه‌ای سرور
+    setTimeout(() => {
+      setLoading(false);
+      setSuccess(true);
+      // بعد از ۳ ثانیه پیام محو شود
+      setTimeout(() => setSuccess(false), 3000);
+    }, 1500);
+  };
 
 const SearchBox = () => {
   return (
@@ -23,9 +38,22 @@ const SearchBox = () => {
 
         {/* دکمه ارسال */}
         <div className="flex justify-center mt-2">
-            <button className="bg-primary text-white rounded-xl px-12 py-2 font-bold hover:bg-blue-900 transition shadow-md">
-            ارسال پاسخ
-            </button>
+            <div className="flex flex-col items-center mt-2 gap-3">
+              <button 
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`${loading ? 'bg-gray-400' : 'bg-primary hover:bg-blue-900'} text-white rounded-xl px-12 py-2 font-bold transition shadow-md flex items-center gap-2`}
+              >
+                {loading ? 'در حال ارسال...' : 'ارسال پاسخ'}
+              </button>
+
+              {/* پیام موفقیت فیک */}
+              {success && (
+                <span className="text-green-600 text-sm font-bold bg-green-50 px-4 py-2 rounded-lg">
+                  پاسخ شما با موفقیت ثبت شد و در حال بررسی است.
+                </span>
+              )}
+          </div>
         </div>
       </div>
 

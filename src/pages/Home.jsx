@@ -2,10 +2,12 @@ import React from 'react';
 import SearchBox from '../components/SearchBox';
 import PostCard from '../components/PostCard';
 import { FaPhone } from "react-icons/fa";
+import { Link } from 'react-router-dom';
 import img1 from '../assets/5093763060974947300.jpg';
 import img2 from '../assets/5093763060974947301.jpg';
 import img3 from '../assets/5093763060974947302.jpg';
 import img4 from '../assets/photo-1476514525535-07fb3b4ae5f1.jpeg';
+
 
 const Home = () => {
 
@@ -56,11 +58,13 @@ const Home = () => {
                 </p>
 
                 <div className="mt-3 flex items-center gap-4 w-full">
-                    <button className="bg-[#1e3a8a] hover:bg-blue-800 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition-all shadow-md flex items-center gap-2 group">
-                        <span>مشاهده تورها</span>
-                        <span className="group-hover:-translate-x-1 transition-transform">←</span>
-                    </button>
-                    <span className="text-[#1e3a8a] text-xs font-bold cursor-pointer hover:underline">اطلاعات بیشتر</span>
+                    <div className="mt-3 flex items-center gap-4 w-full">
+                        <Link to="/blog" className="bg-[#1e3a8a] hover:bg-blue-800 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition-all shadow-md flex items-center gap-2 group">
+                            <span>مشاهده تورها</span>
+                            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+                        </Link>
+                        <Link to="/about" className="text-[#1e3a8a] text-xs font-bold cursor-pointer hover:underline">اطلاعات بیشتر</Link>
+                    </div>
                 </div>
             </div>
 
@@ -97,9 +101,11 @@ const Home = () => {
       </div>
 
       <div className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-40">
-        <button className="bg-primary text-white p-3 md:p-4 rounded-full shadow-lg hover:scale-110 transition flex items-center justify-center">
-            <FaPhone className="text-xl md:text-2xl transform scale-x-[-1]" />
-        </button>
+        <a href="tel:03535228049" className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-40">
+          <button className="bg-primary text-white p-3 md:p-4 rounded-full shadow-lg hover:scale-110 transition flex items-center justify-center">
+              <FaPhone className="text-xl md:text-2xl transform scale-x-[-1]" />
+          </button>
+        </a>
       </div>
 
     </div>
