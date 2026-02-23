@@ -1,28 +1,35 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
-const PostCard = () => {
+const PostCard = ({ title, description, image }) => {
   return (
-    <div className="bg-white rounded-[30px] p-4 pb-6 shadow-sm hover:shadow-md transition flex flex-col items-center text-center">
-      
-      {/* محل عکس (طوسی) */}
-      <div className="w-full aspect-square bg-slate-500 rounded-[20px] mb-4"></div>
-      
-      {/* عنوان */}
-      <h3 className="font-bold text-slate-800 text-sm mb-2">
-        متن ساختگی برای دمو نوشته های بلاگ
-      </h3>
-      
-      {/* متن کوتاه */}
-      <p className="text-[10px] text-gray-400 mb-4 px-2 leading-5">
-        لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از طراحان گرافیک است.
-      </p>
-      
-      {/* لینک ادامه مطلب */}
-      <Link to="#" className="text-primary text-xs font-bold hover:text-blue-800 transition">
-        ادامه مطلب
-      </Link>
+    <div className="flex flex-col items-center w-full">
+      {/* بخش تصویر */}
+      <div className="w-full h-48 bg-gray-500 rounded-t-3xl overflow-hidden shadow-md">
+        {image ? (
+          <img src={image} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          // اگر عکسی نباشد، یک باکس طوسی نمایش داده می‌شود (مثل طرح شما)
+          <div className="w-full h-full bg-gray-500 animate-pulse"></div>
+        )}
+      </div>
 
+      {/* بخش باکس آبی (عنوان) - با مارجین منفی به سمت بالا کشیده شده */}
+      <div className="relative -mt-6 z-10 w-[85%] bg-[#31306b] text-white py-3 px-2 rounded-xl text-center shadow-lg">
+        <h3 className="text-sm md:text-base truncate">
+          {title}
+        </h3>
+      </div>
+
+      {/* بخش توضیحات و دکمه */}
+      <div className="w-full bg-gray-50 pt-10 pb-6 px-4 -mt-6 rounded-b-[2rem] shadow-sm text-center border border-gray-100 flex flex-col items-center gap-4">
+        <p className="text-xs text-gray-500 leading-6 px-2 line-clamp-3 whitespace-pre-line">
+          {description}
+        </p>
+        
+        <button className="text-[#31306b] text-sm font-bold hover:underline">
+          ادامه مطلب
+        </button>
+      </div>
     </div>
   );
 };

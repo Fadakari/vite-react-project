@@ -8,7 +8,7 @@ const Header = () => {
   // لیست منوها برای جلوگیری از تکرار کد
   const menuItems = [
     { text: 'صفحه اصلی', icon: <Home size={20} />, link: '/' },
-    { text: 'معرفی مشاغل', icon: <Briefcase size={20} />, link: '/jobs' },
+    { text: 'معرفی مشاغل', icon: <Briefcase size={20} />, link: '/blog' },
     { text: 'تماس با ما', icon: <Phone size={20} />, link: '/contact' },
     { text: 'درباره ما', icon: <Info size={20} />, link: '/about' },
   ];
@@ -51,33 +51,33 @@ const Header = () => {
                         <span className="font-medium">{item.text}</span>
                     </Link>
                 ))}
-                 <button className="flex items-center gap-3 text-white bg-[#1e3a8a] p-3 rounded-lg mt-4 justify-center shadow-lg">
+                 <Link to="/dashboard" className="flex items-center gap-3 text-white bg-[#1e3a8a] p-3 rounded-lg mt-4 justify-center shadow-lg">
                     <User size={20} />
                     <span>ورود / عضویت</span>
-                </button>
+                </Link>
             </div>
         </div>
       </div>
 
 
       {/* ================= نسخه دسکتاپ (بالای ۷۶۸ پیکسل) ================= */}
-      <header className="hidden md:flex fixed top-20 left-0 right-0 z-50 px-4 justify-center">
+      <header className="hidden md:flex absolute top-20 left-0 right-0 z-50 px-4 justify-center">
         
         <div className="relative w-full max-w-5xl drop-shadow-2xl" dir="rtl">
           
           {/* نوار سفید */}
-          <div className="login-dashboard bg-white rounded-[5rem] px-8 py-2 flex justify-start items-center relative z-10 mx-0 shadow-xl/30">
-            <button className="flex items-center gap-2 text-gray-700 hover:text-blue-900 transition-colors font-bold text-sm">
+          <div className="login-dashboard bg-white rounded-[5rem] px-8 py-2 flex justify-start items-center relative z-20 mx-0 shadow-xl/30">
+            <Link to="/dashboard" className="flex items-center gap-2 text-gray-700 hover:text-blue-900 transition-colors font-bold text-sm">
               <div className="bg-gray-100 p-1.5 rounded-full"><User size={16} /></div>
               <span>ورود / عضویت</span>
-            </button>
+            </Link>
           </div>
 
           {/* نوار آبی */}
           <div className="bg-[#1e3a8a] text-white rounded-b-full rounded-t-[0px] px-12 py-3 flex items-center justify-between relative z-10 mx-0 -mt-1 w-[80%] mr-[10%]">
             <nav className="flex items-center gap-10 w-1/3 justify-start">
               <Link to="/" className="hover:text-yellow-400 transition font-bold text-sm">صفحه اصلی</Link>
-              <Link to="/jobs" className="hover:text-yellow-400 transition font-bold text-sm">معرفی مشاغل</Link>
+              <Link to="/blog" className="hover:text-yellow-400 transition font-bold text-sm">معرفی مشاغل</Link>
             </nav>
 
             <div className="w-1/3"></div>
@@ -90,11 +90,11 @@ const Header = () => {
 
           {/* لوگو */}
           <div className="absolute left-1/2 -translate-x-1/2 top-[-3.5rem] z-20">
-            <div className="bg-white w-[170px] h-[170px] rounded-full flex items-center justify-center border-[8px] border-white">
-              <div className="flex flex-col items-center justify-center text-[#1e3a8a] bg-slate-200 rounded-full p-11">
-                <span className="text-5xl font-serif font-bold leading-none">G</span>
-                <span className="text-[11px] font-bold">Gerah Gosha</span>
-              </div>
+            <div className="bg-blue-100 w-[170px] h-[170px] rounded-full relative flex items-center justify-center border-[8px] border-white">
+                <span className="text-8xl font-serif leading-none absolute left-[3%] top-[11%]">G</span>
+                <span className="text-[25px] absolute right-[22%] top-[22%]">erah</span>
+                <span className="text-[25px] absolute right-[18%] top-[43%]">osha</span>
+                <span className="text-[12px] absolute right-[20%] top-[70%]">gerahgosha.com</span>
             </div>
           </div>
 

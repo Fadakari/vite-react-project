@@ -4,7 +4,7 @@ import { Outlet } from 'react-router-dom';
 
 const Layout = () => {
   return (
-    <div className="min-h-screen bg-main-gradient flex flex-col items-center">
+    <div className="min-h-screen relative bg-main-gradient flex flex-col items-center">
       {/* هدر ثابت */}
       <Header />
       
