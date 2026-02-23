@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Phone, Info, Home, Briefcase, Menu, X } from 'lucide-react';
+import { User, Phone, Info, Home, Briefcase, Menu, X, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Header = () => {
@@ -11,6 +11,8 @@ const Header = () => {
     { text: 'معرفی مشاغل', icon: <Briefcase size={20} />, link: '/blog' },
     { text: 'تماس با ما', icon: <Phone size={20} />, link: '/contact' },
     { text: 'درباره ما', icon: <Info size={20} />, link: '/about' },
+    { text: 'قوانین و مقررات', icon: <FileText size={20} />, link: '/terms' },
+    
   ];
 
   return (
