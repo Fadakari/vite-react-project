@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-const [loading, setLoading] = useState(false);
+const SearchBox = () => {
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = () => {
@@ -14,8 +15,7 @@ const [loading, setLoading] = useState(false);
       setTimeout(() => setSuccess(false), 3000);
     }, 1500);
   };
-
-const SearchBox = () => {
+  
   return (
     <div className="bg-white/60 backdrop-blur-sm rounded-[40px] p-8 w-full max-w-3xl mx-auto shadow-sm">
       

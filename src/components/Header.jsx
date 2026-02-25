@@ -33,7 +33,7 @@ const Header = () => {
       setIsLoginModalOpen(false); // بستن مودال
       setLoginStep(1); // ریست کردن فرم
       setPhoneNumber('');
-      navigate('/dashboard'); // انتقال به داشبورد بعد از ورود موفق
+      alert("کد تایید اشتباه است، در صورت ارسال نشدن کد، دقایقی بعد امتحان کنید.")
     }, 1500);
   };
 

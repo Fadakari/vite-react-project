@@ -60,7 +60,7 @@ const Home = () => {
                 <div className="mt-3 flex items-center gap-4 w-full">
                     <div className="mt-3 flex items-center gap-4 w-full">
                         <Link to="/blog" className="bg-[#1e3a8a] hover:bg-blue-800 text-white text-sm font-bold py-2.5 px-6 rounded-xl transition-all shadow-md flex items-center gap-2 group">
-                            <span>مشاهده تورها</span>
+                            <span>مشاهده مشاغل</span>
                             <span className="group-hover:-translate-x-1 transition-transform">←</span>
                         </Link>
                         <Link to="/about" className="text-[#1e3a8a] text-xs font-bold cursor-pointer hover:underline">اطلاعات بیشتر</Link>

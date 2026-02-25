@@ -1,7 +1,6 @@
 import React from 'react';
 import CountDown from '../components/CountDown';
 import { FaUser, FaTicketAlt, FaTrophy, FaEdit, FaSignOutAlt, FaThList } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   return (

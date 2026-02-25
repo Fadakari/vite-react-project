@@ -26,9 +26,9 @@ const PostCard = ({ title, description, image }) => {
           {description}
         </p>
         
-        <button className="text-[#31306b] text-sm font-bold hover:underline">
+        {/* <button onClick={() => alert('جزئیات تکمیلی این فروشگاه/کسب و کار به‌زودی در سامانه قرار می‌گیرد.')} className="text-[#31306b] text-sm font-bold hover:underline">
           ادامه مطلب
-        </button>
+        </button> */}
       </div>
     </div>
   );
