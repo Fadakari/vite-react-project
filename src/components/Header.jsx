@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Phone, Info, Home, Briefcase, Menu, X, FileText, Smartphone, KeyRound, Loader2 } from 'lucide-react';
+import { User, Phone, Info, Home, Briefcase, Menu, X, FileText, Smartphone, KeyRound, Loader2, HelpCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
@@ -41,10 +41,10 @@ const Header = () => {
   const menuItems = [
     { text: 'صفحه اصلی', icon: <Home size={20} />, link: '/' },
     { text: 'معرفی مشاغل', icon: <Briefcase size={20} />, link: '/blog' },
+    { text: 'سوال و جواب', icon: <HelpCircle size={20} />, link: '/qa' },
     { text: 'تماس با ما', icon: <Phone size={20} />, link: '/contact' },
     { text: 'درباره ما', icon: <Info size={20} />, link: '/about' },
     { text: 'قوانین و مقررات', icon: <FileText size={20} />, link: '/terms' },
-    
   ];
 
   return (
@@ -109,9 +109,10 @@ const Header = () => {
 
           {/* نوار آبی */}
           <div className="bg-[#1e3a8a] text-white rounded-b-full rounded-t-[0px] px-12 py-3 flex items-center justify-between relative z-10 mx-0 -mt-1 w-[80%] mr-[10%]">
-            <nav className="flex items-center gap-10 w-1/3 justify-start">
+            <nav className="flex items-center gap-6 w-1/3 justify-start">
               <Link to="/" className="hover:text-yellow-400 transition font-bold text-sm">صفحه اصلی</Link>
               <Link to="/blog" className="hover:text-yellow-400 transition font-bold text-sm">معرفی مشاغل</Link>
+              <Link to="/qa" className="hover:text-yellow-400 transition font-bold text-sm">سوال و جواب</Link>
             </nav>
 
             <div className="w-1/3"></div>

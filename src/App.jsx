@@ -7,6 +7,7 @@ import Blog from './pages/Blog';
 import About from './pages/About';
 import Terms from './pages/Terms';
 import Contact from './pages/Contact';
+import QA from './pages/QA';
 
 function App() {
   return (
@@ -16,6 +17,8 @@ function App() {
           <Route index element={<Home />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="blog" element={<Blog />} />
+          <Route path="jobs" element={<Blog />} />
+          <Route path="qa" element={<QA />} />
           <Route path="about" element={<About />} />
           <Route path="terms" element={<Terms />} />
           <Route path="contact" element={<Contact />} />
