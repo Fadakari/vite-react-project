@@ -35,7 +35,16 @@ INSTALLED_APPS = [
     'apps.jobs',
     'apps.qa',
     'apps.quiz',
+    'apps.payment',
 ]
+
+# تنظیمات درگاه پرداخت سامان شاپرک (SEP)
+SEP_TERMINAL_ID = os.getenv('SEP_TERMINAL_ID', '21689219')
+SEP_DONATE_AMOUNT = int(os.getenv('SEP_DONATE_AMOUNT', 150000))
+
+# تنظیمات پروکسی معکوس و HTTPS در سرور لینوکس / cPanel
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 # میدلورها (CORS باید در ابتدای لیست باشد)
 MIDDLEWARE = [

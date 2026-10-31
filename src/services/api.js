@@ -99,12 +99,30 @@ export async function submitQuizAnswer(data) {
   return result;
 }
 
+export async function startQuizPayment(data) {
+  const res = await fetch(`${API_BASE_URL}/api/quiz/start-payment/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) {
+    throw new Error(result.message || 'خطا در اتصال به درگاه پرداخت');
+  }
+  return result;
+}
+
 export default {
   API_BASE_URL,
   fetchJobs,
+  fetchJobById,
+  fetchJobCategories,
   fetchFaqs,
   fetchQuestions,
   submitQuestion,
   fetchActiveQuiz,
   submitQuizAnswer,
+  startQuizPayment,
 };

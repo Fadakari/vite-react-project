@@ -49,7 +49,7 @@ class QuizSubmissionCreateSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=True)
     option_id = serializers.IntegerField(required=True)
     phone_number = serializers.CharField(max_length=20, required=True)
-    national_code = serializers.CharField(max_length=20, required=True)
+    national_code = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
     device_fingerprint = serializers.CharField(max_length=128, required=False, allow_blank=True, default='')
 
     def validate_phone_number(self, value):
@@ -62,9 +62,9 @@ class QuizSubmissionCreateSerializer(serializers.Serializer):
 
     def validate_national_code(self, value):
         code = normalize_digits(value)
-        if not is_valid_national_code(code):
+        if code and not is_valid_national_code(code):
             raise serializers.ValidationError(
-                "کد ملی وارد شده نامعتبر است. لطفاً کد ملی ۱۰ رقمی صحیح را وارد کنید."
+                "کد ملی وارد شده نامعتبر است."
             )
         return code
 
@@ -72,7 +72,6 @@ class QuizSubmissionCreateSerializer(serializers.Serializer):
         question_id = attrs.get('question_id')
         option_id = attrs.get('option_id')
         phone = attrs.get('phone_number')
-        national_code = attrs.get('national_code')
         device_fingerprint = attrs.get('device_fingerprint', '').strip()
 
         # ۱. بررسی وجود و فعال بودن سوال مسابقه
@@ -87,24 +86,17 @@ class QuizSubmissionCreateSerializer(serializers.Serializer):
         except QuizOption.DoesNotExist:
             raise serializers.ValidationError({"option_id": "گزینه انتخاب شده نامعتبر است."})
 
-        # ۳. جلوگیری از تکرار کد ملی
-        if QuizSubmission.objects.filter(question=question, national_code=national_code).exists():
+        # ۳. جلوگیری از شرکت مجدد شماره‌ای که قبلاً پرداخت موفق داشته است
+        if QuizSubmission.objects.filter(question=question, phone_number=phone, payment_status='paid').exists():
             raise serializers.ValidationError({
-                "national_code": "امکان ثبت پاسخ وجود ندارد؛ این کد ملی قبلاً در این دوره مسابقه ثبت شده است."
+                "phone_number": "این شماره همراه قبلاً در این دوره مسابقه شرکت کرده و تراکنش آن تایید شده است."
             })
 
-        # ۴. جلوگیری از تکرار شماره تماس
-        if QuizSubmission.objects.filter(question=question, phone_number=phone).exists():
-            raise serializers.ValidationError({
-                "phone_number": "امکان ثبت پاسخ وجود ندارد؛ این شماره تماس قبلاً در این دوره مسابقه ثبت شده است."
-            })
-
-        # ۵. جلوگیری از شرکت یک دستگاه با سیم‌کارت‌های مختلف (حتی در صورت تغییر آی‌پی)
-        # پیام به صورت کاملاً گنگ و مبهم تنظیم شده تا کاربر متوجه نحوه شناسایی نشود
+        # ۴. جلوگیری از شرکت یک دستگاه با سیم‌کارت‌های مختلف (در صورت پرداخت موفق قبلی)
         if device_fingerprint:
-            if QuizSubmission.objects.filter(question=question, device_fingerprint=device_fingerprint).exists():
+            if QuizSubmission.objects.filter(question=question, device_fingerprint=device_fingerprint, payment_status='paid').exists():
                 raise serializers.ValidationError({
-                    "device_fingerprint": "امکان ثبت پاسخ وجود ندارد. اطلاعات هویتی یا مشخصات این نشست قبلاً در سامانه ثبت شده و هر کاربر تنها یک‌بار مجاز به ارسال پاسخ است."
+                    "device_fingerprint": "امکان ثبت پاسخ وجود ندارد. اطلاعات این دستگاه قبلاً در مسابقه ثبت شده است."
                 })
 
         attrs['question_obj'] = question

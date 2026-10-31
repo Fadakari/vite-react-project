@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from apps.payment.views import payment_callback
 
 # شخصی‌سازی پنل مدیریت جنگو با متن‌های فارسی و شکیل
 admin.site.site_header = "سامانه مدیریت گره‌گشا ایساتیس"
@@ -20,6 +21,8 @@ def api_root(request):
             "questions_list_and_create": "/api/qa/questions/",
             "quiz_active": "/api/quiz/active/",
             "quiz_submit": "/api/quiz/submit/",
+            "quiz_start_payment": "/api/quiz/start-payment/",
+            "payment_donate": "/payment/donate/",
             "admin_panel": "/admin/",
         }
     })
@@ -30,6 +33,9 @@ urlpatterns = [
     path('api/jobs/', include('apps.jobs.urls')),
     path('api/qa/', include('apps.qa.urls')),
     path('api/quiz/', include('apps.quiz.urls')),
+    path('payment/', include('apps.payment.urls')),
+    # پشتیبانی از آدرس قدیمی /api/payment/callback/ در صورت بازگشت از تراکنش‌های قبلی
+    path('api/payment/callback/', payment_callback),
 ]
 
 # در هاست و لوکال فایل‌های آپلود شده (مدیا) در دسترس باشند

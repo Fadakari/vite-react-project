@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حمایت مالی (دونیت) | گره‌گشا ایساتیس</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            font-family: Vazirmatn, Tahoma, Arial, sans-serif;
+            padding: 20px;
+        }
+        .card {
+            width: 100%;
+            max-width: 440px;
+            padding: 40px 30px;
+            background: white;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+        }
+        .icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 20px;
+            background: #dbeafe;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 15px auto;
+        }
+        h1 {
+            font-size: 22px;
+            color: #1e293b;
+            margin: 0 0 8px 0;
+        }
+        p {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.7;
+            margin: 0 0 20px 0;
+        }
+        .amount-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .amount {
+            font-size: 28px;
+            font-weight: 900;
+            color: #15803d;
+        }
+        .currency {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: normal;
+        }
+        button {
+            width: 100%;
+            border: 0;
+            padding: 16px;
+            border-radius: 14px;
+            background: #15803d;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(21, 128, 61, 0.3);
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #166534;
+            transform: translateY(-1px);
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 18px;
+            font-size: 13px;
+            color: #64748b;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            color: #1e3a8a;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="icon">🎁</div>
+    <h1>حمایت مالی از سامانه گره‌گشا</h1>
+    <p>مشارکت شما در ارتقای کسب‌وکارهای مردمی و خدمات شهری موثر خواهد بود.</p>
+
+    <div class="amount-box">
+        <span class="amount">۱۵,۰۰۰</span>
+        <span class="currency">تومان</span>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">(۱۵۰,۰۰۰ ریال)</div>
+    </div>
+
+    <form method="post" action="{% url 'start_payment' %}">
+        {% csrf_token %}
+        <input type="hidden" name="amount" value="150000">
+        <button type="submit">
+            اتصال به درگاه پرداخت شاپرک
+        </button>
+    </form>
+
+    <a href="/" class="back-link">← بازگشت به صفحه اصلی</a>
+</div>
+
+</body>
+</html>

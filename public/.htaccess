@@ -1,6 +1,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # هدایت درخواست بازگشت درگاه شاپرک سامان به بک‌اند جنگو (با حفظ متد و تمام پارامترها)
+  RewriteRule ^payment/callback/?$ https://donate.gerahgosha.ir/payment/callback/ [R=307,L,QSA]
+  RewriteRule ^api/payment/callback/?$ https://donate.gerahgosha.ir/payment/callback/ [R=307,L,QSA]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

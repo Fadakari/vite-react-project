@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, CheckCircle2, AlertCircle, Phone, CreditCard, Sparkles } from 'lucide-react';
-import { fetchActiveQuiz, submitQuizAnswer } from '../services/api';
+import { Trophy, CheckCircle2, AlertCircle, Phone, CreditCard, Sparkles, Gift } from 'lucide-react';
+import { fetchActiveQuiz, submitQuizAnswer, startQuizPayment } from '../services/api';
+import QuizParticipationModal from './QuizParticipationModal';
+import GoldenCardModal from './GoldenCardModal';
 
 // تولید یا بازیابی شناسه یکتای دستگاه/مرورگر جهت جلوگیری از تقلب حتی با تغییر آی‌پی یا سیم‌کارت
 function getDeviceFingerprint() {
@@ -20,19 +22,6 @@ function getDeviceFingerprint() {
   }
 }
 
-// بررسی صحت الگوریتم ریاضی کد ملی ایران
-function isValidNationalCode(code) {
-  if (!/^\d{10}$/.test(code)) return false;
-  if (/^(\d)\1{9}$/.test(code)) return false; // ارقام یکسان مثل ۱۱۱۱۱۱۱۱۱۱
-  let sum = 0;
-  for (let i = 0; i < 9; i++) {
-    sum += parseInt(code.charAt(i), 10) * (10 - i);
-  }
-  const remainder = sum % 11;
-  const lastDigit = parseInt(code.charAt(9), 10);
-  return remainder < 2 ? lastDigit === remainder : lastDigit === (11 - remainder);
-}
-
 const SearchBox = () => {
   // سوال و گزینه‌های پیش‌فرض در صورت آفلاین بودن سرور
   const [quiz, setQuiz] = useState({
@@ -47,10 +36,23 @@ const SearchBox = () => {
   const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [nationalCode, setNationalCode] = useState('');
-  const [nationalCodeError, setNationalCodeError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resultMessage, setResultMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+  const [resultMessage, setResultMessage] = useState(null);
+
+  // وضعیت‌های مودال‌ها
+  const [isParticipationModalOpen, setIsParticipationModalOpen] = useState(false);
+  const [isGoldenCardModalOpen, setIsGoldenCardModalOpen] = useState(false);
+  const [issuedCard, setIssuedCard] = useState(null);
+
+  // بازیابی کارت قبلی کاربر از حافظه مرورگر در صورت وجود
+  useEffect(() => {
+    try {
+      const savedCard = localStorage.getItem('__gerahgosha_saved_card');
+      if (savedCard) {
+        setIssuedCard(JSON.parse(savedCard));
+      }
+    } catch (e) {}
+  }, []);
 
   // تبدیل خودکار اعداد فارسی و عربی به انگلیسی
   const toEnglishDigits = (str) => {
@@ -77,7 +79,7 @@ const SearchBox = () => {
 
   // اعتبارسنجی زنده شماره تماس
   const handlePhoneChange = (e) => {
-    let val = toEnglishDigits(e.target.value).replace(/\D/g, ''); // فقط ارقام انگلیسی
+    let val = toEnglishDigits(e.target.value).replace(/\D/g, '');
     if (val.length > 11) val = val.slice(0, 11);
     setPhoneNumber(val);
 
@@ -95,27 +97,8 @@ const SearchBox = () => {
     }
   };
 
-  // اعتبارسنجی زنده کد ملی
-  const handleNationalCodeChange = (e) => {
-    let val = toEnglishDigits(e.target.value).replace(/\D/g, '');
-    if (val.length > 10) val = val.slice(0, 10);
-    setNationalCode(val);
-
-    if (!val) {
-      setNationalCodeError('');
-      return;
-    }
-
-    if (val.length < 10) {
-      setNationalCodeError(`کد ملی باید ۱۰ رقم باشد (${val.length} از ۱۰ رقم وارد شده)`);
-    } else if (!isValidNationalCode(val)) {
-      setNationalCodeError('کد ملی وارد شده با فرمول استاندارد همخوانی ندارد.');
-    } else {
-      setNationalCodeError('');
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  // کلیک اولیه روی ثبت: اعتبارسنجی فرم و باز کردن مودال تایید و پرداخت
+  const handleInitialSubmit = (e) => {
     e.preventDefault();
     setResultMessage(null);
 
@@ -123,7 +106,7 @@ const SearchBox = () => {
     if (!selectedOptionId) {
       setResultMessage({
         type: 'error',
-        text: 'لطفاً یکی از گزینه‌ها را برای پاسخ به سوال انتخاب کنید.',
+        text: 'لطفاً یکی از گزینه‌ها را برای پاسخ به سوال مسابقه انتخاب کنید.',
       });
       return;
     }
@@ -139,206 +122,233 @@ const SearchBox = () => {
       return;
     }
 
-    // ۳. بررسی کد ملی
-    const cleanNationalCode = toEnglishDigits(nationalCode).trim();
-    if (!isValidNationalCode(cleanNationalCode)) {
-      setNationalCodeError('لطفاً کد ملی ۱۰ رقمی معتبر را وارد کنید.');
-      setResultMessage({
-        type: 'error',
-        text: 'کد ملی وارد شده نامعتبر است.',
-      });
-      return;
-    }
+    // باز کردن مودال تایید نهایی و پرداخت
+    setIsParticipationModalOpen(true);
+  };
 
+  // پرداخت دونیت و ثبت پاسخ در درگاه
+  const handleDonateAndPay = async (amountInRials) => {
     setLoading(true);
+    setResultMessage(null);
     try {
       const fingerprint = getDeviceFingerprint();
-      const res = await submitQuizAnswer({
+      const res = await startQuizPayment({
         question_id: quiz.id,
         option_id: selectedOptionId,
-        phone_number: cleanPhone,
-        national_code: cleanNationalCode,
+        phone_number: toEnglishDigits(phoneNumber).trim(),
         device_fingerprint: fingerprint,
+        amount: amountInRials,
       });
 
-      // پیام بی‌طرفانه بدون فاش کردن درستی یا نادرستی پاسخ
-      setResultMessage({
-        type: 'success',
-        text: res.message || 'پاسخ شما با موفقیت ثبت شد. در صورت صحت پاسخ، اطلاعات شما در لیست قرعه‌کشی قرار خواهد گرفت.',
-      });
+      if (res.payment_type === 'sep' && res.token && res.payment_url) {
+        // ایجاد فرم خودکار انتقال به درگاه سامان
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = res.payment_url;
+        
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'Token';
+        tokenInput.value = res.token;
+        form.appendChild(tokenInput);
+
+        const getMethodInput = document.createElement('input');
+        getMethodInput.type = 'hidden';
+        getMethodInput.name = 'GetMethod';
+        getMethodInput.value = 'true';
+        form.appendChild(getMethodInput);
+
+        document.body.appendChild(form);
+        form.submit();
+      } else if (res.redirect_url) {
+        // انتقال به شبیه‌ساز پرداخت تستی یا آدرس مستقیم
+        const fullUrl = res.redirect_url.startsWith('http') 
+          ? res.redirect_url 
+          : `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'}${res.redirect_url}`;
+        window.location.href = fullUrl;
+      }
     } catch (err) {
+      setLoading(false);
+      setIsParticipationModalOpen(false);
       setResultMessage({
         type: 'error',
-        text: err.message || 'امکان ثبت پاسخ وجود ندارد. لطفاً اطلاعات ارسالی را بررسی کنید.',
+        text: err.message || 'خطا در اتصال به درگاه پرداخت.',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const optionsList = quiz.options && quiz.options.length > 0 ? quiz.options : [];
+  const selectedOptionText = quiz.options.find(o => o.id === selectedOptionId)?.text || '';
 
   return (
-    <div className="bg-white/85 backdrop-blur-md rounded-[2.5rem] p-6 md:p-10 w-full max-w-3xl mx-auto shadow-xl border border-blue-50 transition-all duration-300" dir="rtl">
-      
-      {/* سربرگ مسابقه */}
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <span className="bg-yellow-400/20 text-yellow-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-yellow-300">
-          <Trophy size={14} className="text-yellow-600" />
-          مسابقه و قرعه‌کشی هفتگی
-        </span>
+    <div className="w-full flex justify-center px-2 sm:px-4" dir="rtl">
+      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-3xl shadow-xl border border-blue-100 p-5 sm:p-8 transition-all">
+        
+        {/* سربرگ مسابقه */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-5">
+          <div className="flex items-center gap-3 text-right w-full sm:w-auto">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-white flex items-center justify-center shadow-lg shadow-amber-200 flex-shrink-0">
+              <Trophy size={24} className="animate-bounce" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                  <Sparkles size={12} />
+                  مسابقه و قرعه‌کشی جوایز ویژه
+                </span>
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-[#1e3a8a] mt-1 leading-snug">
+                {quiz.title}
+              </h3>
+            </div>
+          </div>
+
+          {/* اگر کاربر قبلاً کارت گرفته، دکمه مشاهده سریع کارت */}
+          {issuedCard && (
+            <button
+              type="button"
+              onClick={() => setIsGoldenCardModalOpen(true)}
+              className="bg-amber-100/80 hover:bg-amber-200 text-amber-900 text-xs font-extrabold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 border border-amber-300 shadow-sm"
+            >
+              <Gift size={15} className="text-amber-700" />
+              <span>مشاهده کارت طلایی من ({issuedCard.code})</span>
+            </button>
+          )}
+        </div>
+
+        {/* فرم شرکت در مسابقه */}
+        <form onSubmit={handleInitialSubmit} className="space-y-6">
+          
+          {/* لیست گزینه‌های پویا */}
+          <div>
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-3">
+              گزینه صحیح را انتخاب کنید:
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {quiz.options.map((option, idx) => {
+                const isSelected = selectedOptionId === option.id;
+                return (
+                  <div
+                    key={option.id}
+                    onClick={() => setSelectedOptionId(option.id)}
+                    className={`cursor-pointer rounded-2xl p-4 transition-all duration-200 border-2 flex items-center justify-between group ${
+                      isSelected
+                        ? 'border-[#1e3a8a] bg-blue-50/70 shadow-md'
+                        : 'border-gray-200 hover:border-blue-300 bg-gray-50/50 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
+                        isSelected 
+                          ? 'bg-[#1e3a8a] text-white shadow-sm' 
+                          : 'bg-white text-gray-500 border border-gray-200 group-hover:border-blue-300'
+                      }`}>
+                        {(idx + 1).toLocaleString('fa-IR')}
+                      </span>
+                      <span className={`text-xs sm:text-sm font-bold ${
+                        isSelected ? 'text-[#1e3a8a]' : 'text-gray-700'
+                      }`}>
+                        {option.text}
+                      </span>
+                    </div>
+
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected ? 'border-[#1e3a8a] bg-[#1e3a8a]' : 'border-gray-300 bg-white'
+                    }`}>
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* فیلد شماره تماس */}
+          <div className="max-w-md mx-auto sm:mx-0">
+            <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5">
+              شماره همراه شرکت‌کننده (جهت قرعه‌کشی و صدور کارت):
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                dir="ltr"
+                inputMode="numeric"
+                value={phoneNumber}
+                onChange={handlePhoneChange}
+                placeholder="09123456789"
+                maxLength={11}
+                className={`w-full bg-gray-50 border rounded-2xl py-3.5 px-4 pr-11 text-xs sm:text-sm font-bold text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white transition-all ${
+                  phoneError ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-200 focus:ring-2 focus:ring-[#1e3a8a]'
+                }`}
+              />
+              <Phone size={18} className="absolute right-3.5 top-3.5 text-gray-400" />
+            </div>
+            {phoneError ? (
+              <p className="text-[11px] text-red-600 mt-1.5 flex items-center gap-1 font-medium">
+                <AlertCircle size={13} />
+                {phoneError}
+              </p>
+            ) : (
+              <p className="text-[11px] text-gray-400 mt-1">
+                شماره باید حتماً با <span className="font-bold text-gray-600">09</span> شروع شود (۱۱ رقم کامل).
+              </p>
+            )}
+          </div>
+
+          {/* پیام نتیجه یا خطا */}
+          {resultMessage && (
+            <div className={`p-4 rounded-2xl text-xs sm:text-sm font-bold flex items-start gap-2.5 animate-in fade-in ${
+              resultMessage.type === 'success' 
+                ? 'bg-green-50 text-green-900 border border-green-200' 
+                : 'bg-red-50 text-red-900 border border-red-200'
+            }`}>
+              {resultMessage.type === 'success' ? (
+                <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+              )}
+              <span className="leading-6">{resultMessage.text}</span>
+            </div>
+          )}
+
+          {/* دکمه ارسال پاسخ و باز کردن مرحله بعد */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-gray-100">
+            <span className="text-[11px] text-gray-400 text-center sm:text-right">
+              🎁 با پرداخت آنلاین حمایت مالی ۱۵,۰۰۰ تومان، در قرعه‌کشی رسمی شرکت کرده و کارت طلایی تخفیف ۱ ساله دریافت کنید.
+            </span>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto bg-[#1e3a8a] hover:bg-blue-900 text-white font-extrabold py-3.5 px-8 rounded-2xl text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
+            >
+              <Trophy size={16} className="text-yellow-400 group-hover:scale-110 transition-transform" />
+              <span>ثبت پاسخ و ادامه</span>
+            </button>
+          </div>
+
+        </form>
+
       </div>
 
-      <h2 className="text-center text-lg md:text-2xl font-extrabold text-[#1e3a8a] mb-6 leading-relaxed">
-        {quiz.title}
-      </h2>
+      {/* ۱. مودال تایید و پرداخت */}
+      {isParticipationModalOpen && (
+        <QuizParticipationModal
+          questionTitle={quiz.title}
+          selectedOptionText={selectedOptionText}
+          phoneNumber={phoneNumber}
+          loading={loading}
+          onDonateAndPay={handleDonateAndPay}
+          onClose={() => setIsParticipationModalOpen(false)}
+        />
+      )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        
-        {/* گزینه‌های پویا (هر تعداد که ادمین تعیین کرده باشد) */}
-        <div className={`grid gap-3.5 ${optionsList.length > 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2'}`}>
-          {optionsList.map((option, index) => {
-            const isSelected = selectedOptionId === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => { setSelectedOptionId(option.id); setResultMessage(null); }}
-                className={`p-4 rounded-2xl border-2 text-right transition-all duration-200 flex items-center justify-between group cursor-pointer ${
-                  isSelected
-                    ? 'border-[#1e3a8a] bg-blue-50/80 shadow-md ring-2 ring-blue-200'
-                    : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50/50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${
-                    isSelected ? 'bg-[#1e3a8a] text-white' : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100'
-                  }`}>
-                    {index + 1}
-                  </span>
-                  <span className="font-bold text-sm md:text-base text-gray-800">
-                    {option.text}
-                  </span>
-                </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  isSelected ? 'border-[#1e3a8a] bg-[#1e3a8a]' : 'border-gray-300'
-                }`}>
-                  {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* فیلدهای شماره موبایل و کد ملی */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
-          {/* فیلد شماره موبایل */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-              <Phone size={14} className="text-[#1e3a8a]" />
-              <span>شماره موبایل (الزامی):</span>
-            </label>
-            
-            <input 
-              type="text" 
-              inputMode="numeric"
-              required
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              placeholder="09123456789"
-              className={`w-full bg-white rounded-xl px-4 py-3 text-left font-mono text-base tracking-wider outline-none transition border shadow-sm ${
-                phoneError 
-                  ? 'border-red-400 focus:ring-2 focus:ring-red-200' 
-                  : 'border-gray-200 focus:border-[#1e3a8a] focus:ring-2 focus:ring-blue-100'
-              }`}
-              dir="ltr"
-            />
-
-            {phoneError && (
-              <p className="text-xs text-red-600 font-medium flex items-center gap-1 mt-0.5">
-                <AlertCircle size={13} className="flex-shrink-0" />
-                <span>{phoneError}</span>
-              </p>
-            )}
-          </div>
-
-          {/* فیلد کد ملی */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-              <CreditCard size={14} className="text-[#1e3a8a]" />
-              <span>کد ملی ۱۰ رقمی (جهت احراز قرعه‌کشی):</span>
-            </label>
-            
-            <input 
-              type="text" 
-              inputMode="numeric"
-              required
-              value={nationalCode}
-              onChange={handleNationalCodeChange}
-              placeholder="0012345678"
-              className={`w-full bg-white rounded-xl px-4 py-3 text-left font-mono text-base tracking-wider outline-none transition border shadow-sm ${
-                nationalCodeError 
-                  ? 'border-red-400 focus:ring-2 focus:ring-red-200' 
-                  : 'border-gray-200 focus:border-[#1e3a8a] focus:ring-2 focus:ring-blue-100'
-              }`}
-              dir="ltr"
-            />
-
-            {nationalCodeError && (
-              <p className="text-xs text-red-600 font-medium flex items-center gap-1 mt-0.5">
-                <AlertCircle size={13} className="flex-shrink-0" />
-                <span>{nationalCodeError}</span>
-              </p>
-            )}
-          </div>
-
-        </div>
-
-        {/* هشدار مهم شرایط مسابقه */}
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-xs leading-5">
-          <strong>⚠️ توجه:</strong> شماره تماس حتماً باید با <strong>09</strong> شروع شود و کد ملی باید متعلق به شرکت‌کننده باشد. در زمان اهدای جایزه، کارت ملی فرد برنده استعلام و تطبیق داده خواهد شد. هر کاربر تنها یک‌بار مجاز به ثبت پاسخ در این دوره مسابقه است.
-        </div>
-
-        {/* نمایش پیام نتیجه ثبت */}
-        {resultMessage && (
-          <div className={`p-4 rounded-2xl text-sm leading-6 flex items-start gap-2.5 transition-all ${
-            resultMessage.type === 'success'
-              ? 'bg-blue-50 text-[#1e3a8a] border border-blue-200 shadow-sm'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-            {resultMessage.type === 'success' ? (
-              <CheckCircle2 size={20} className="text-[#1e3a8a] flex-shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-            )}
-            <span>{resultMessage.text}</span>
-          </div>
-        )}
-
-        {/* دکمه ارسال پاسخ */}
-        <div className="flex justify-center mt-1">
-          <button 
-            type="submit"
-            disabled={loading || !selectedOptionId || !!phoneError || phoneNumber.length !== 11 || !!nationalCodeError || nationalCode.length !== 10}
-            className={`w-full sm:w-auto min-w-[220px] rounded-xl px-10 py-3.5 font-bold transition shadow-lg flex items-center justify-center gap-2 cursor-pointer ${
-              loading || !selectedOptionId || !!phoneError || phoneNumber.length !== 11 || !!nationalCodeError || nationalCode.length !== 10
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
-                : 'bg-[#1e3a8a] hover:bg-blue-800 text-white hover:shadow-xl active:scale-[0.98]'
-            }`}
-          >
-            {loading ? (
-              <span>در حال ثبت...</span>
-            ) : (
-              <>
-                <Sparkles size={18} />
-                <span>ثبت پاسخ و شرکت در قرعه‌کشی</span>
-              </>
-            )}
-          </button>
-        </div>
-
-      </form>
+      {/* ۲. مودال کارت طلایی تخفیف اختصاصی */}
+      {isGoldenCardModalOpen && issuedCard && (
+        <GoldenCardModal
+          card={issuedCard}
+          onClose={() => setIsGoldenCardModalOpen(false)}
+        />
+      )}
 
     </div>
   );
